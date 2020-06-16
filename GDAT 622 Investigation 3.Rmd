@@ -1,0 +1,132 @@
+---
+title: "GDAT 622 Investigation 3"
+author: "Pavan Hothi"
+date: "6/15/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+{
+  c("conflicted",   
+    "data.table",    
+    "dplyr",         
+    "drat",          
+    "dtplyr",       
+    "here",
+    "igraph",       
+    "igraphdata",    
+    "intergraph",    
+    "NetData", 
+    "purrr",
+    "statnet"        
+  ) -> package_names
+  
+  for (package_name in package_names) {
+    if (!is.element(package_name, installed.packages()[, 1])) {
+      install.packages(package_name,
+                       repos = "http://cran.mtu.edu/")
+    }
+    library(
+      package_name,
+      character.only = TRUE,
+      quietly = TRUE,
+      verbose = FALSE
+    )
+  }
+  rm(list = c("package_name", "package_names"))
+  
+  
+  if (!is.element("networkdata", installed.packages()[, 1])) {
+    addRepo("schochastics")
+    install.packages("networkdata")
+  }
+  library(
+    "networkdata",
+    character.only = TRUE,
+    quietly = TRUE,
+    verbose = FALSE
+  )
+}
+
+set_here()
+
+
+options(show.signif.stars = FALSE)
+options(digits = 4)
+```
+
+
+
+```{r}
+paste0("https://raw.githubusercontent.com/mathbeveridge/gameofthrones/master/data/got-s",1:8,"-edges.csv") -> edges
+purrr::map(edges,read.csv) -> edges_tbl
+
+do.call(rbind.data.frame, edges_tbl) -> got
+
+
+```
+
+
+
+```{r}
+graph.data.frame(got, directed=T) -> got_graph
+asNetwork(got_graph) -> got_graph_net
+sna::degree(got_graph_net) -> got_deg
+network::set.vertex.attribute(got_graph_net, "degree", got_deg)
+got_graph_net
+plot(got_graph_net, displaylabels = TRUE, boxed.labels = FALSE,
+     label.cex = 0.75, pad = 1, main = "GOT Degree Network")
+
+
+```
+
+
+
+```{r}
+asNetwork(got_graph) -> got_graph_net1
+sna::closeness(got_graph_net1) -> got_clo
+network::set.vertex.attribute(got_graph_net1, "closeness", got_clo)
+got_graph_net1
+plot(got_graph_net1, displaylabels = TRUE, boxed.labels = FALSE,
+     label.cex = 0.75, pad = 1, main = "GOT Closeness Network")
+
+
+```
+
+
+
+```{r}
+asNetwork(got_graph) -> got_graph_net2
+sna::betweenness(got_graph_net2) -> got_bet
+network::set.vertex.attribute(got_graph_net2, "betweeness", got_bet)
+got_graph_net2
+plot(got_graph_net2, displaylabels = TRUE, boxed.labels = FALSE,
+     label.cex = 0.75, pad = 1, main = "GOT Between Network")
+
+
+```
+
+
+
+```{r}
+asNetwork(got_graph) -> got_graph_net3
+eigen_centrality(got_graph) -> got_eig
+network::set.vertex.attribute(got_graph_net3, "eigen", got_eig)
+got_graph_net3
+plot(got_graph_net3, displaylabels = TRUE, boxed.labels = FALSE,
+     label.cex = 0.75, pad = 1, main = "GOT Eigen Network")
+
+
+```
+
+
+
+```{r}
+got_ergm <- ergm(got_graph_net ~ edges)
+summary(got_ergm)
+
+```
+
+
